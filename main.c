@@ -110,7 +110,7 @@ int main(void)
 	buzz_init();
 
 	while(1) {
-		for (i=0; i<50; i++) {
+		for (i=0; i<20; i++) {
 			tone = (uint16_t)(1000+i*100);
 			beep(tone);
 		}
