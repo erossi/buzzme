@@ -30,43 +30,90 @@ ISR(TIMER0_OVF_vect) {
         beeps--;
 }
 
-void init(void)
+void buzz_play(const uint16_t freq, const uint8_t duty)
+{
+	uint8_t c;
+
+	/* Fstep = 16Mhz / 256 = 62500hz
+	 * 40 step = 62500hz / 40 = 1562.5 hz (Ftop)
+	 * Duty 90% = _______|-|
+	 */
+	c = (uint8_t)(62500/freq);
+	OCR0A = c;
+	OCR0B = (uint8_t)(c*duty/100);
+	/* Clear counter */
+	TCNT0 = 0x00;
+	/* prescaler 256 */
+	TCCR0B |= _BV(CS02);
+}
+
+void buzz_stop(void)
+{
+	/* stop the counter, leave the WGM set */
+	TCCR0B = _BV(WGM02);
+}
+
+void buzz_init(void)
 {
 	/* OC0A PD6
 	 * OC0B PD5
 	 */
 	DDRD |= _BV(PD5);
+	TCCR0A = _BV(COM0B1) | _BV(COM0B0) | _BV(WGM01) | _BV(WGM00);
+	TCCR0B = _BV(WGM02);
+	/* Ena IRQ Compare Match B and Overflow */
+	/* TIMSK0 = _BV(OCIE0B) | _BV(TOIE0);
+	 */
 }
 
-void shut(void)
+void buzz_shut(void)
 {
+	TIMSK0 = 0;
+	TCCR0B = 0;
+	TCCR0A = 0;
+	OCR0A = 0;
+	OCR0B = 0;
 	DDRD &= ~_BV(PD5);
+}
+
+void beep(uint16_t tone)
+{
+	uint8_t i;
+
+	led(ON);
+	buzz_play(tone, 20);
+	i = (uint8_t)((3000-tone)/10);
+	i++;
+
+	while (i) {
+		_delay_ms(10);
+		i--;
+	}
+
+	led(OFF);
+	buzz_stop();
+	i = (uint8_t)((3000-tone)/10);
+	i++;
+
+	while (i) {
+		_delay_ms(10);
+		i--;
+	}
 }
 
 int main(void)
 {
 	uint8_t i;
+	uint16_t tone;
 
 	led_init();
-	init();
-
-	TCCR0A = _BV(COM0B1) | _BV(COM0B0) | _BV(WGM02) | _BV(WGM01) | _BV(WGM00);
-	/* prescaler 256 */
-	TCCR0B = _BV(CS02);
-	/* Fstep = 16Mhz / 256 = 62500hz
-	 * 40 step = 62500hz / 40 = 1562.5 hz (Ftop)
-	 * Duty 90% = _______|-|
-	 */
-	OCR0A = 40;
-	OCR0B = 35;
-	/* Ena IRQ Compare Match B and Overflow */
-	TIMSK0 = _BV(OCIE0B) | _BV(TOIE0);
+	buzz_init();
 
 	while(1) {
-		led(ON);
-		_delay_ms(100);
-		led(OFF);
-		_delay_ms(900);
+		for (i=0; i<50; i++) {
+			tone = (uint16_t)(1000+i*100);
+			beep(tone);
+		}
 	}
 
 	return(0);
