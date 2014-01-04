@@ -54,7 +54,7 @@ SIZE = avr-size --format=avr --mcu=$(MCU) $(PRGNAME).elf
 
 REMOVE = rm -f
 
-objects =
+objects = arduino_led.o
 
 .PHONY: clean indent
 .SILENT: help
@@ -70,10 +70,8 @@ all: $(objects)
 debug.o:
 	$(CC) $(CFLAGS) -D GITREL=\"$(GIT_TAG)\" -c debug.c
 
-programardu:
+arduino:
 	$(DUDE) -c $(DUDEADEV) -P $(DUDEAPORT)
-
-arduino: programardu
 
 programstk:
 	$(DUDE) -c $(DUDESDEV) -P $(DUDESPORT)
