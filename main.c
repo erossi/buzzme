@@ -36,7 +36,9 @@ void buzz_play(const uint16_t freq, const uint8_t duty)
 
 	/* Fstep = 16Mhz / 256 = 62500hz
 	 * 40 step = 62500hz / 40 = 1562.5 hz (Ftop)
-	 * Duty 90% = _______|-|
+	 *                    _         _
+	 * Duty 90% = _______| |_______| |
+	 *            COMPB--^ ^--OVF
 	 */
 	c = (uint8_t)(62500/freq);
 	OCR0A = c;
